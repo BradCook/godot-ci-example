@@ -1,0 +1,19 @@
+name: build-godot-game
+run-name: build-godot-${{ github.sha }}
+on: [push]
+env:
+    GODOT_RUST_WORKSPACE: "${{ github.workspace }}/rust"
+    GODOT_RUST_TARGET: "${{ github.workspace }}/target"
+jobs:
+    setup-build-deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: dtolnay/rust-toolchain@stable
+            - uses: Swatinem/rust-cache@v2
+              with:
+                workspaces: ${{ env.GODOT_RUST_WORKSPACE }} -> ../target
+            - name: Compile godot-rust extension game code
+              run: |
+                cargo build --manifest-path $GODOT_RUST_WORKSPACE/Cargo.toml --target-dir $GODOT_RUST_TARGET

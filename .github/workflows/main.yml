@@ -5,9 +5,17 @@ env:
     GODOT_RUST_WORKSPACE: "${{ github.workspace }}/rust"
     GODOT_RUST_TARGET: "${{ github.workspace }}/target"
 jobs:
-    setup-build-deploy:
+    setup-godot:
         runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Get godot game engine version
+              run: |
+                GODOT_VERSION=$(cat .godot-version | xargs)
+                echo "godot_version=$GODOT_VERSION" >> $GITHUB_OUTPUT
 
+    compile-rust-code:
+        runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
             - uses: dtolnay/rust-toolchain@stable

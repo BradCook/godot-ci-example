@@ -26,6 +26,23 @@ jobs:
                 echo "System architecture: $ARCH"
                 echo "arch=$ARCH" >> $GITHUB_OUTPUT
 
+    setup-godot-engine:
+      runs-on: ubuntu-latest
+      needs: [find-godot-engine-info]
+      steps:
+          - name: Install Godot game engine
+            env:
+              GODOT_VERSION: ${{ needs.find-godot-engine-info.outputs.godot_version }}
+              ARCH: ${{ needs.find-godot-engine-info.outputs.arch }}
+            run: |
+              mkdir $HOME/godot_engine
+              cd $HOME/godot_engine
+              wget --verbose -O godot.zip https://github.com/godotengine/godot-builds/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_linux.$ARCH.zip
+              unzip godot.zip
+              ln -s Godot_v$GODOT_VERSION-stable_linux.$ARCH Godot
+              export PATH="$HOME/godot_engine:$PATH"
+              Godot --version
+
     compile-rust-code:
         runs-on: ubuntu-latest
         steps:

@@ -5,14 +5,26 @@ env:
     GODOT_RUST_WORKSPACE: "${{ github.workspace }}/rust"
     GODOT_RUST_TARGET: "${{ github.workspace }}/target"
 jobs:
-    setup-godot:
+    find-godot-engine-info:
         runs-on: ubuntu-latest
+        outputs:
+          godot_version: ${{ steps.godot-version.outputs.godot_version }}
+          arch: ${{ steps.arch.outputs.arch }}
         steps:
             - uses: actions/checkout@v4
-            - name: Get godot game engine version
+            - name: Find Godot version and system architecture
+              id: godot-version
               run: |
                 GODOT_VERSION=$(cat .godot-version | xargs)
+                echo "Godot Version: $GODOT_VERSION"
                 echo "godot_version=$GODOT_VERSION" >> $GITHUB_OUTPUT
+
+            - name: Find system architecture
+              id: arch
+              run: |
+                ARCH=$(uname -m)
+                echo "System architecture: $ARCH"
+                echo "arch=$ARCH" >> $GITHUB_OUTPUT
 
     compile-rust-code:
         runs-on: ubuntu-latest

@@ -4,6 +4,8 @@ on: [push]
 env:
     GODOT_RUST_WORKSPACE: "${{ github.workspace }}/rust"
     GODOT_RUST_TARGET: "${{ github.workspace }}/target"
+    GODOT_ZIP_DOWNLOAD_FOLDER: "${{ github.workspace }}/download"
+    GODOT_INSTALL_FOLDER: "${{ github.workspace }}/godot_engine"
 jobs:
     find-godot-engine-info:
         runs-on: ubuntu-latest
@@ -26,22 +28,43 @@ jobs:
                 echo "System architecture: $ARCH"
                 echo "arch=$ARCH" >> $GITHUB_OUTPUT
 
-    setup-godot-engine:
+    setup-godot:
       runs-on: ubuntu-latest
       needs: [find-godot-engine-info]
+      outputs:
+        cache_key: ${{ steps.restore-godot-cache.outputs.cache-primary-key }}
       steps:
-          - name: Install Godot game engine
-            env:
-              GODOT_VERSION: ${{ needs.find-godot-engine-info.outputs.godot_version }}
-              ARCH: ${{ needs.find-godot-engine-info.outputs.arch }}
-            run: |
-              mkdir $HOME/godot_engine
-              cd $HOME/godot_engine
-              wget --verbose -O godot.zip https://github.com/godotengine/godot-builds/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_linux.$ARCH.zip
-              unzip godot.zip
-              ln -s Godot_v$GODOT_VERSION-stable_linux.$ARCH Godot
-              export PATH="$HOME/godot_engine:$PATH"
-              Godot --version
+        - name: Restore Godot from Cache
+          id: restore-godot-cache
+          uses: actions/cache/restore@v4
+          with:
+            path: ${{ env.GODOT_INSTALL_FOLDER }}
+            key: ${{ needs.find-godot-engine-info.outputs.godot_version }}-${{ needs.find-godot-engine-info.outputs.arch }}
+
+        - name: Install Godot
+          id: install-godot
+          env:
+            GODOT_VERSION: ${{ needs.find-godot-engine-info.outputs.godot_version }}
+            ARCH: ${{ needs.find-godot-engine-info.outputs.arch }}
+          if: steps.restore-godot-cache.outputs.cache-hit != 'true'
+          run: |
+            mkdir $GODOT_INSTALL_FOLDER
+            mkdir $GODOT_ZIP_DOWNLOAD_FOLDER
+            cd $GODOT_ZIP_DOWNLOAD_FOLDER
+            wget --no-verbose -O godot.zip https://github.com/godotengine/godot-builds/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_linux.$ARCH.zip
+            unzip godot.zip -d $GODOT_INSTALL_FOLDER
+            cd $GODOT_INSTALL_FOLDER
+            ln -s Godot_v$GODOT_VERSION-stable_linux.$ARCH Godot
+            export PATH="$GODOT_INSTALL_FOLDER:$PATH"
+            Godot --version
+
+        - name: Save Godot to cache
+          uses: actions/cache/save@v4
+          id: save-godot-cache
+          if: steps.restore-godot-cache.outputs.cache-hit != 'true'
+          with:
+            path: ${{ env.GODOT_INSTALL_FOLDER }}
+            key: ${{ steps.restore-godot-cache.outputs.cache-primary-key }}
 
     compile-rust-code:
         runs-on: ubuntu-latest

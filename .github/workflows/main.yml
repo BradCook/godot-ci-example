@@ -77,3 +77,24 @@ jobs:
             - name: Compile godot-rust extension game code
               run: |
                 cargo build --manifest-path $GODOT_RUST_WORKSPACE/Cargo.toml --target-dir $GODOT_RUST_TARGET
+
+    build-game:
+      runs-on: ubuntu-latest
+      needs: [setup-godot, compile-rust-code]
+      steps:
+        - uses: actions/checkout@v4
+        - name: Restore Godot from Cache
+          id: restore-godot-cache
+          uses: actions/cache/restore@v4
+          with:
+            path: ${{ env.GODOT_INSTALL_FOLDER }}
+            key: ${{ needs.setup-godot.outputs.cache_key }}
+
+        - name: set-godot-to-path
+          id: set-godot-to-path
+          run: |
+            echo $GODOT_INSTALL_FOLDER >> $GITHUB_PATH
+
+        - name: test-godot
+          run: |
+            Godot --version

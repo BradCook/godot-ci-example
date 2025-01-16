@@ -6,6 +6,8 @@ env:
     GODOT_RUST_TARGET: "${{ github.workspace }}/target"
     GODOT_ZIP_DOWNLOAD_FOLDER: "${{ github.workspace }}/download"
     GODOT_INSTALL_FOLDER: "${{ github.workspace }}/godot_engine"
+    RUST_GDEXTENSION_BINARY_NAME: "libsquash_creeps.so"
+    RUST_GDEXTENSION_BINARY_PATH: "${{ github.workspace }}/target/debug"
 jobs:
     find-godot-engine-info:
         runs-on: ubuntu-latest
@@ -77,6 +79,14 @@ jobs:
             - name: Compile godot-rust extension game code
               run: |
                 cargo build --manifest-path $GODOT_RUST_WORKSPACE/Cargo.toml --target-dir $GODOT_RUST_TARGET
+            - name: Save Rust GDExtension binary
+              id: save-rust-binary
+              uses: actions/upload-artifact@v4
+              with:
+                name: ${{ env.RUST_GDEXTENSION_BINARY_NAME }}
+                path: ${{ env.RUST_GDEXTENSION_BINARY_PATH }}/${{ env.RUST_GDEXTENSION_BINARY_NAME }}
+                retention-days: 1
+                overwrite: true
 
     build-game:
       runs-on: ubuntu-latest
@@ -98,3 +108,14 @@ jobs:
         - name: test-godot
           run: |
             Godot --version
+
+        - name: Get Rust GDExtension binary
+          id: get-rust-binary
+          uses: actions/download-artifact@v4
+          with:
+            name: ${{ env.RUST_GDEXTENSION_BINARY_NAME }}
+            path: ${{ env.RUST_GDEXTENSION_BINARY_PATH }}
+
+        - name: Test binary
+          run: |
+            ls -la $RUST_GDEXTENSION_BINARY_PATH

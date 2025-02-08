@@ -6,6 +6,7 @@ env:
     GODOT_RUST_TARGET: "${{ github.workspace }}/target"
     GODOT_ZIP_DOWNLOAD_FOLDER: "${{ github.workspace }}/download"
     GODOT_INSTALL_FOLDER: "${{ github.workspace }}/godot_engine"
+    GODOT_TEMPLATES_FOLDER: "${{ github.workspace }}/godot_templates"
     RUST_GDEXTENSION_BINARY_NAME: "libsquash_creeps.so"
     RUST_GDEXTENSION_BINARY_PATH: "${{ github.workspace }}/target/debug"
 jobs:
@@ -35,6 +36,7 @@ jobs:
       needs: [find-godot-engine-info]
       outputs:
         cache_key: ${{ steps.restore-godot-cache.outputs.cache-primary-key }}
+        templates_cache_key: ${{ steps.restore-templates-cache.outputs.cache-primary-key }}
       steps:
         - name: Restore Godot from Cache
           id: restore-godot-cache
@@ -68,6 +70,34 @@ jobs:
             path: ${{ env.GODOT_INSTALL_FOLDER }}
             key: ${{ steps.restore-godot-cache.outputs.cache-primary-key }}
 
+        - name: Restore Godot Export Templates from Cache
+          id: restore-templates-cache
+          uses: actions/cache/restore@v4
+          with:
+            path: ${{ env.GODOT_TEMPLATES_FOLDER }}
+            key: ${{ needs.find-godot-engine-info.outputs.godot_version }}
+
+        - name: Install Templates
+          id: install-templates
+          env:
+            GODOT_VERSION: ${{ needs.find-godot-engine-info.outputs.godot_version }}
+          if: steps.restore-templates-cache.outputs.cache-hit != 'true'
+          run: |
+            mkdir $GODOT_TEMPLATES_FOLDER
+            mkdir $GODOT_ZIP_DOWNLOAD_FOLDER
+            cd $GODOT_ZIP_DOWNLOAD_FOLDER
+            wget --no-verbose -O templates.tpz https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+            unzip templates.tpz -d $GODOT_TEMPLATES_FOLDER
+            ls -la $GODOT_TEMPLATES_FOLDER
+
+        - name: Save Godot Templates to Cache
+          uses: actions/cache/save@v4
+          id: save-templates-cache
+          if: steps.restore-templates-cache.outputs.cache-hit != 'true'
+          with:
+            path: ${{ env.GODOT_TEMPLATES_FOLDER }}
+            key: ${{ steps.restore-templates-cache.outputs.cache-primary-key }}
+
     compile-rust-code:
         runs-on: ubuntu-latest
         steps:
@@ -100,6 +130,13 @@ jobs:
             path: ${{ env.GODOT_INSTALL_FOLDER }}
             key: ${{ needs.setup-godot.outputs.cache_key }}
 
+        - name: Restore Templates from Cache
+          id: restore-templates-cache
+          uses: actions/cache/restore@v4
+          with:
+            path: ${{ env.GODOT_TEMPLATES_FOLDER }}
+            key: ${{ needs.setup-godot.outputs.templates_cache_key }}
+
         - name: set-godot-to-path
           id: set-godot-to-path
           run: |
@@ -108,6 +145,7 @@ jobs:
         - name: test-godot
           run: |
             Godot --version
+            ls -la $GODOT_TEMPLATES_FOLDER
 
         - name: Get Rust GDExtension binary
           id: get-rust-binary

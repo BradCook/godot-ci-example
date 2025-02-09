@@ -165,7 +165,7 @@ jobs:
             EXPORT_CONFIG: ${{ secrets.EXPORT_CONFIG }}
           run: |
             mkdir $BUILD_FOLDER
-            ln -s $EXPORT_CONFIG squash_the_creeps_start_1.1.0/export_presets.cfg
+            echo "$EXPORT_CONFIG" >> squash_the_creeps_start_1.1.0/export_presets.cfg
             Godot --path squash_the_creeps_start_1.1.0 --headless --export-debug linux $BUILD_FOLDER
 
         - name: Save Built Game

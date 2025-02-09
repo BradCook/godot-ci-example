@@ -9,6 +9,7 @@ env:
     GODOT_TEMPLATES_FOLDER: "${{ github.workspace }}/godot_templates"
     RUST_GDEXTENSION_BINARY_NAME: "libsquash_creeps.so"
     RUST_GDEXTENSION_BINARY_PATH: "${{ github.workspace }}/target/debug"
+    BUILD_FOLDER: "${{ github.workspace }}/build"
 jobs:
     find-godot-engine-info:
         runs-on: ubuntu-latest
@@ -157,3 +158,16 @@ jobs:
         - name: Test binary
           run: |
             ls -la $RUST_GDEXTENSION_BINARY_PATH
+
+        - name: Build Game
+          id: build-game
+          run: |
+            mkdir $BUILD_FOLDER
+            Godot --path squash_the_creeps_start_1.1.0 --headless --export-debug linux $BUILD_FOLDER
+
+        - name: Save Built Game
+          id: save-game
+          uses: actions/upload-artifact@v4
+          with:
+            path: ${{ env.BUILD_FOLDER }}
+            overwrite: true

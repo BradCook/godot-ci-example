@@ -55,7 +55,7 @@ jobs:
             mkdir $GODOT_INSTALL_FOLDER
             mkdir $GODOT_ZIP_DOWNLOAD_FOLDER
             cd $GODOT_ZIP_DOWNLOAD_FOLDER
-            wget --no-verbose -O godot.zip https://github.com/godotengine/godot-builds/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_linux.$ARCH.zip
+            wget --no-verbose -O godot.zip https://github.com/godotengine/godot/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_linux.$ARCH.zip
             unzip godot.zip -d $GODOT_INSTALL_FOLDER
             cd $GODOT_INSTALL_FOLDER
             ln -s Godot_v$GODOT_VERSION-stable_linux.$ARCH Godot
@@ -86,7 +86,7 @@ jobs:
             mkdir $GODOT_TEMPLATES_FOLDER
             mkdir $GODOT_ZIP_DOWNLOAD_FOLDER
             cd $GODOT_ZIP_DOWNLOAD_FOLDER
-            wget --no-verbose -O templates.tpz https://downloads.tuxfamily.org/godotengine/${GODOT_VERSION}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+            wget --no-verbose -O templates.tpz https://github.com/godotengine/godot/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_export_templates.tpz
             unzip templates.tpz -d $GODOT_TEMPLATES_FOLDER
             ls -la $GODOT_TEMPLATES_FOLDER
 

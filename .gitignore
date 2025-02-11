@@ -4,12 +4,13 @@ build/
 .vscode/
 
 # Godot 4+ specific ignores
-.godot/
+squash_the_creeps_start_1.1.0/.godot/*
+!squash_the_creeps_start_1.1.0/.godot/imported/
 
 # Godot-specific ignores
 .import/
-# export.cfg
-# export_presets.cfg
+export.cfg
+export_presets.cfg
 
 # Imported translations (automatically generated from CSV files)
 *.translation

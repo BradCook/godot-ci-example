@@ -6,7 +6,7 @@ env:
     GODOT_RUST_TARGET: "${{ github.workspace }}/target"
     GODOT_ZIP_DOWNLOAD_FOLDER: "${{ github.workspace }}/download"
     GODOT_INSTALL_FOLDER: "${{ github.workspace }}/godot_engine"
-    GODOT_TEMPLATES_FOLDER: "${{ github.workspace }}/godot_templates"
+    GODOT_TEMPLATES_FOLDER: "${{ github.workspace }}/export_templates"
     RUST_GDEXTENSION_BINARY_NAME: "libsquash_creeps.so"
     RUST_GDEXTENSION_BINARY_PATH: "${{ github.workspace }}/target/debug"
     BUILD_FOLDER: "${{ github.workspace }}/build"
@@ -88,7 +88,8 @@ jobs:
             mkdir $GODOT_ZIP_DOWNLOAD_FOLDER
             cd $GODOT_ZIP_DOWNLOAD_FOLDER
             wget --no-verbose -O templates.tpz https://github.com/godotengine/godot/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_export_templates.tpz
-            unzip templates.tpz -d $GODOT_TEMPLATES_FOLDER
+            unzip templates.tpz -d ${{ runner.temp }}
+            cp --recursive ${{ runner.temp }}/templates/* $GODOT_TEMPLATES_FOLDER
             ls -la $GODOT_TEMPLATES_FOLDER
 
         - name: Save Godot Templates to Cache
@@ -121,7 +122,7 @@ jobs:
 
     build-game:
       runs-on: ubuntu-latest
-      needs: [setup-godot, compile-rust-code]
+      needs: [find-godot-engine-info, setup-godot, compile-rust-code]
       steps:
         - uses: actions/checkout@v4
         - name: Restore Godot from Cache
@@ -138,15 +139,19 @@ jobs:
             path: ${{ env.GODOT_TEMPLATES_FOLDER }}
             key: ${{ needs.setup-godot.outputs.templates_cache_key }}
 
-        - name: set-godot-to-path
+        - name: Set Godot to Path
           id: set-godot-to-path
           run: |
             echo $GODOT_INSTALL_FOLDER >> $GITHUB_PATH
 
-        - name: test-godot
+        - name: Copy Templates to export folder
+          id: copy-templates
+          env:
+            GODOT_VERSION: ${{ needs.find-godot-engine-info.outputs.godot_version }}
           run: |
-            Godot --version
-            ls -la $GODOT_TEMPLATES_FOLDER
+            mkdir -p $HOME/.local/share/godot/export_templates/$GODOT_VERSION.stable
+            cp -r $GODOT_TEMPLATES_FOLDER/* $HOME/.local/share/godot/export_templates/$GODOT_VERSION.stable
+            ls -la $HOME/.local/share/godot/export_templates/$GODOT_VERSION.stable
 
         - name: Get Rust GDExtension binary
           id: get-rust-binary

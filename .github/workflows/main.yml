@@ -8,7 +8,7 @@ env:
     GODOT_INSTALL_FOLDER: "${{ github.workspace }}/godot_engine"
     GODOT_TEMPLATES_FOLDER: "${{ github.workspace }}/export_templates"
     RUST_GDEXTENSION_BINARY_NAME: "libsquash_creeps.so"
-    RUST_GDEXTENSION_BINARY_PATH: "${{ github.workspace }}/target/debug"
+    RUST_GDEXTENSION_BINARY_PATH: "${{ github.workspace }}/rust/target/debug"
     BUILD_FOLDER: "${{ github.workspace }}/build"
 jobs:
     find-godot-engine-info:
@@ -116,7 +116,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                 name: ${{ env.RUST_GDEXTENSION_BINARY_NAME }}
-                path: ${{ env.RUST_GDEXTENSION_BINARY_PATH }}/${{ env.RUST_GDEXTENSION_BINARY_NAME }}
+                path: ${{ env.GODOT_RUST_TARGET }}/debug/${{ env.RUST_GDEXTENSION_BINARY_NAME }}
                 retention-days: 1
                 overwrite: true
 

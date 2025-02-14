@@ -12,7 +12,7 @@ env:
     EXPORT_PRESET_NAME: "linux"
     EXPORTED_GAME_FILE_NAME: "squash_creeps"
     EXPORTED_GAME_FILE_EXTENSION: "x86_64"
-    RELEASE_TYPE: "debug"
+    RELEASE_TYPE: "release"
     BUILD_FOLDER: "${{ github.workspace }}/build"
 jobs:
     find-godot-engine-info:
@@ -112,7 +112,11 @@ jobs:
                 workspaces: ${{ env.GODOT_RUST_WORKSPACE }} -> ../target
             - name: Compile godot-rust extension game code
               run: |
-                cargo build --manifest-path $GODOT_RUST_WORKSPACE/Cargo.toml --target-dir $GODOT_RUST_BUILD_FOLDER
+                if [[ $RELEASE_TYPE == "release" ]]; then
+                  cargo build --release --manifest-path $GODOT_RUST_WORKSPACE/Cargo.toml --target-dir $GODOT_RUST_BUILD_FOLDER
+                else
+                  cargo build --manifest-path $GODOT_RUST_WORKSPACE/Cargo.toml --target-dir $GODOT_RUST_BUILD_FOLDER
+                fi
             - name: Save Rust GDExtension binary
               id: save-rust-binary
               uses: actions/upload-artifact@v4

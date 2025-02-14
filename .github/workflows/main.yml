@@ -3,11 +3,16 @@ run-name: build-godot-${{ github.sha }}
 on: [push]
 env:
     GODOT_RUST_WORKSPACE: "${{ github.workspace }}/rust"
-    GODOT_RUST_TARGET: "${{ github.workspace }}/target"
+    GODOT_GAME_WORKSPACE: "${{ github.workspace }}/squash_the_creeps_start_1.1.0"
+    GODOT_RUST_BUILD_FOLDER: "${{ github.workspace }}/target"
     GODOT_INSTALL_FOLDER: "${{ github.workspace }}/godot_engine"
     GODOT_TEMPLATES_FOLDER: "${{ github.workspace }}/export_templates"
     RUST_GDEXTENSION_BINARY_NAME: "libsquash_creeps.so"
-    RUST_GDEXTENSION_BINARY_PATH: "${{ github.workspace }}/rust/target/debug"
+    RUST_GDEXTENSION_BINARY_PATH: "${{ github.workspace }}/rust/target"
+    EXPORT_PRESET_NAME: "linux"
+    EXPORTED_GAME_FILE_NAME: "squash_creeps"
+    EXPORTED_GAME_FILE_EXTENSION: "x86_64"
+    RELEASE_TYPE: "debug"
     BUILD_FOLDER: "${{ github.workspace }}/build"
 jobs:
     find-godot-engine-info:
@@ -107,13 +112,13 @@ jobs:
                 workspaces: ${{ env.GODOT_RUST_WORKSPACE }} -> ../target
             - name: Compile godot-rust extension game code
               run: |
-                cargo build --manifest-path $GODOT_RUST_WORKSPACE/Cargo.toml --target-dir $GODOT_RUST_TARGET
+                cargo build --manifest-path $GODOT_RUST_WORKSPACE/Cargo.toml --target-dir $GODOT_RUST_BUILD_FOLDER
             - name: Save Rust GDExtension binary
               id: save-rust-binary
               uses: actions/upload-artifact@v4
               with:
                 name: ${{ env.RUST_GDEXTENSION_BINARY_NAME }}
-                path: ${{ env.GODOT_RUST_TARGET }}/debug/${{ env.RUST_GDEXTENSION_BINARY_NAME }}
+                path: ${{ env.GODOT_RUST_BUILD_FOLDER }}/${{ env.RELEASE_TYPE }}/${{ env.RUST_GDEXTENSION_BINARY_NAME }}
                 retention-days: 1
                 overwrite: true
 
@@ -155,11 +160,7 @@ jobs:
           uses: actions/download-artifact@v4
           with:
             name: ${{ env.RUST_GDEXTENSION_BINARY_NAME }}
-            path: ${{ env.RUST_GDEXTENSION_BINARY_PATH }}
-
-        - name: Test binary
-          run: |
-            ls -la $RUST_GDEXTENSION_BINARY_PATH
+            path: ${{ env.RUST_GDEXTENSION_BINARY_PATH }}/${{ env.RELEASE_TYPE }}
 
         - name: Build Game
           id: build-game
@@ -167,8 +168,8 @@ jobs:
             EXPORT_CONFIG: ${{ secrets.EXPORT_CONFIG }}
           run: |
             mkdir -p $BUILD_FOLDER
-            echo "$EXPORT_CONFIG" >> squash_the_creeps_start_1.1.0/export_presets.cfg
-            Godot --path squash_the_creeps_start_1.1.0 --export-debug linux $BUILD_FOLDER/game.x86_64 --headless
+            echo "$EXPORT_CONFIG" >> $GODOT_GAME_WORKSPACE/export_presets.cfg
+            Godot --path $GODOT_GAME_WORKSPACE --export-$RELEASE_TYPE $EXPORT_PRESET_NAME $BUILD_FOLDER/$EXPORTED_GAME_FILE_NAME.$EXPORTED_GAME_FILE_EXTENSION --headless
             echo "Here are the files that have been built"
             ls -la $BUILD_FOLDER
 
@@ -176,5 +177,6 @@ jobs:
           id: save-game
           uses: actions/upload-artifact@v4
           with:
+            name: ${{ env.EXPORTED_GAME_FILE_NAME }}-${{ env.RELEASE_TYPE }}
             path: ${{ env.BUILD_FOLDER }}
             overwrite: true

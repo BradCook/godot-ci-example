@@ -4,7 +4,6 @@ on: [push]
 env:
     GODOT_RUST_WORKSPACE: "${{ github.workspace }}/rust"
     GODOT_RUST_TARGET: "${{ github.workspace }}/target"
-    GODOT_ZIP_DOWNLOAD_FOLDER: "${{ github.workspace }}/download"
     GODOT_INSTALL_FOLDER: "${{ github.workspace }}/godot_engine"
     GODOT_TEMPLATES_FOLDER: "${{ github.workspace }}/export_templates"
     RUST_GDEXTENSION_BINARY_NAME: "libsquash_creeps.so"
@@ -54,8 +53,7 @@ jobs:
           if: steps.restore-godot-cache.outputs.cache-hit != 'true'
           run: |
             mkdir $GODOT_INSTALL_FOLDER
-            mkdir $GODOT_ZIP_DOWNLOAD_FOLDER
-            cd $GODOT_ZIP_DOWNLOAD_FOLDER
+            cd ${{ runner.temp }}
             wget --no-verbose -O godot.zip https://github.com/godotengine/godot/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_linux.$ARCH.zip
             unzip godot.zip -d $GODOT_INSTALL_FOLDER
             cd $GODOT_INSTALL_FOLDER
@@ -85,10 +83,9 @@ jobs:
           if: steps.restore-templates-cache.outputs.cache-hit != 'true'
           run: |
             mkdir $GODOT_TEMPLATES_FOLDER
-            mkdir $GODOT_ZIP_DOWNLOAD_FOLDER
-            cd $GODOT_ZIP_DOWNLOAD_FOLDER
+            cd ${{runner.temp}}
             wget --no-verbose -O templates.tpz https://github.com/godotengine/godot/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_export_templates.tpz
-            unzip templates.tpz -d ${{ runner.temp }}
+            unzip templates.tpz
             cp --recursive ${{ runner.temp }}/templates/* $GODOT_TEMPLATES_FOLDER
             ls -la $GODOT_TEMPLATES_FOLDER
 

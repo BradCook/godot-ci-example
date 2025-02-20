@@ -4,8 +4,8 @@ compatibility_minimum = 4.1
 reloadable = true
 
 [libraries]
-linux.debug.x86_64 =     "res://../rust/target/debug/libsquash_creeps.so"
 linux.release.x86_64 =   "res://../rust/target/release/libsquash_creeps.so"
+linux.debug.x86_64 =     "res://../rust/target/debug/libsquash_creeps.so"
 windows.debug.x86_64 =   "res://../rust/target/debug/squash_creeps.dll"
 windows.release.x86_64 = "res://../rust/target/release/squash_creeps.dll"
 macos.debug =            "res://../rust/target/debug/libsquash_creeps.dylib"
